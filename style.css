@@ -1,0 +1,122 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #0b1020;
+  color: white;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.panel {
+  position: absolute;
+  background: rgba(9, 15, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 14px 18px;
+}
+
+.top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.bottom-left {
+  left: 20px;
+  bottom: 20px;
+  max-width: 420px;
+}
+
+.title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#status {
+  margin-top: 6px;
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a9d5ff;
+}
+
+#objective {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+#portalPrompt {
+  position: absolute;
+  left: 50%;
+  bottom: 62px;
+  transform: translateX(-50%);
+  background: rgba(15, 19, 31, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+#portalPrompt.visible {
+  opacity: 1;
+}
+
+#transitionOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 20, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+#transitionOverlay.visible {
+  opacity: 1;
+}
+
+#transitionText {
+  font-size: clamp(1.5rem, 2.4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  color: white;
+  text-shadow: 0 0 18px rgba(141, 179, 255, 0.75);
+}
