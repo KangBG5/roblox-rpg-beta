@@ -1,5 +1,3 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js';
-
 const app = document.getElementById('app');
 const statusEl = document.getElementById('status');
 const objectiveEl = document.getElementById('objective');
@@ -70,6 +68,80 @@ let nearestPortal = null;
 let transitionState = null;
 let currentArea = 'lobby';
 let inDungeon = false;
+
+const mobileControls = {
+  active: false,
+  moveX: 0,
+  moveY: 0,
+  pointerId: null,
+};
+
+const mobileHud = document.createElement('div');
+mobileHud.id = 'mobileHud';
+mobileHud.innerHTML = `
+  <div id="movePad">
+    <div id="moveKnob"></div>
+  </div>
+  <div id="actionButtons">
+    <button id="interactBtn" aria-label="Interact">E</button>
+    <button id="exitBtn" aria-label="Exit dungeon">R</button>
+  </div>
+`;
+app.appendChild(mobileHud);
+
+const movePad = document.getElementById('movePad');
+const moveKnob = document.getElementById('moveKnob');
+const interactBtn = document.getElementById('interactBtn');
+const exitBtn = document.getElementById('exitBtn');
+
+interactBtn.addEventListener('click', () => {
+  if (nearestPortal) triggerDungeon(nearestPortal);
+});
+
+exitBtn.addEventListener('click', () => {
+  if (inDungeon) returnToLobby();
+});
+
+function updateJoystickFromPointer(clientX, clientY) {
+  const rect = movePad.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const dx = clientX - centerX;
+  const dy = clientY - centerY;
+  const maxDist = rect.width * 0.35;
+  const dist = Math.min(Math.hypot(dx, dy), maxDist);
+  const angle = Math.atan2(dy, dx);
+  const x = Math.cos(angle) * dist;
+  const y = Math.sin(angle) * dist;
+
+  moveKnob.style.transform = `translate(${x}px, ${y}px)`;
+  mobileControls.moveX = dist === 0 ? 0 : x / maxDist;
+  mobileControls.moveY = dist === 0 ? 0 : y / maxDist;
+}
+
+movePad.addEventListener('pointerdown', (event) => {
+  mobileControls.active = true;
+  mobileControls.pointerId = event.pointerId;
+  movePad.setPointerCapture(event.pointerId);
+  updateJoystickFromPointer(event.clientX, event.clientY);
+});
+
+movePad.addEventListener('pointermove', (event) => {
+  if (!mobileControls.active || event.pointerId !== mobileControls.pointerId) return;
+  updateJoystickFromPointer(event.clientX, event.clientY);
+});
+
+function releaseJoystick() {
+  mobileControls.active = false;
+  mobileControls.pointerId = null;
+  mobileControls.moveX = 0;
+  mobileControls.moveY = 0;
+  moveKnob.style.transform = 'translate(0px, 0px)';
+}
+
+movePad.addEventListener('pointerup', releaseJoystick);
+movePad.addEventListener('pointerleave', releaseJoystick);
+movePad.addEventListener('pointercancel', releaseJoystick);
 
 const ambientLight = new THREE.AmbientLight(0xe6f1ff, 0.8);
 scene.add(ambientLight);
@@ -513,12 +585,24 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-function updatePlayer(delta) {
-  const moveX = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0);
-  const moveZ = (keys.s || keys.arrowdown ? 1 : 0) - (keys.w || keys.arrowup ? 1 : 0);
+function getMovementInput() {
+  const keyboardX = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0);
+  const keyboardZ = (keys.s || keys.arrowdown ? 1 : 0) - (keys.w || keys.arrowup ? 1 : 0);
 
-  if (moveX !== 0 || moveZ !== 0) {
-    const movement = new THREE.Vector3(moveX, 0, moveZ).normalize();
+  const mobileX = mobileControls.moveX || 0;
+  const mobileZ = -((mobileControls.moveY || 0));
+
+  return {
+    x: keyboardX || mobileX,
+    z: keyboardZ || mobileZ,
+  };
+}
+
+function updatePlayer(delta) {
+  const input = getMovementInput();
+
+  if (input.x !== 0 || input.z !== 0) {
+    const movement = new THREE.Vector3(input.x, 0, input.z).normalize();
     player.position.x += movement.x * player.speed * delta;
     player.position.z += movement.z * player.speed * delta;
 
